@@ -1,62 +1,48 @@
 package com.example.demo;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
-public class Teste {
+public class CaptchaController {
+	
+	private final String SECRET_KEY = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe";
+	
+//  essa secretKey é uma de teste do Google
+//  
+//  token de teste tb: "10000000-aaaa-bbbb-cccc-000000000001"
 	
     @GetMapping("/ping")
     public String ping() {
         return "pong";
     }
-
-    @PostMapping("/echo")
-    public String echo(@RequestBody String body) {
-        return "Você enviou: " + body;
-    }
     
-    @PostMapping("/teste")
+    @PostMapping("/ex1")
     private boolean verifyCaptcha(@RequestBody String token) throws IOException{
         String url = "https://www.google.com/recaptcha/api/siteverify";
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
         conn.setRequestMethod("POST");
         conn.setDoOutput(true);
 
-        String postData = "secret=" + "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe" + "&response=" + token;
+        String postData = "secret=" + SECRET_KEY + "&response=" + token;
         try (OutputStream os = conn.getOutputStream()) {
             os.write(postData.getBytes(StandardCharsets.UTF_8));
         }
         
         ObjectMapper mapper = new ObjectMapper();
         CaptchaResponse response = mapper.readValue(conn.getInputStream(), CaptchaResponse.class);
-        
-        // Leia uma única vez o InputStream
-//        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-//        StringBuilder json = new StringBuilder();
-//        String line;
-//        while ((line = reader.readLine()) != null) {
-//            json.append(line);
-//        }
-//        reader.close();
-//
-//        System.out.println("Resposta JSON: " + json);
-//
-//        // Aqui está o conserto
-//        ObjectMapper mapper = new ObjectMapper();
-//        CaptchaResponse response = mapper.readValue(json.toString(), CaptchaResponse.class);
         
         System.out.println("Response" + response);
 
@@ -65,13 +51,24 @@ public class Teste {
         
     }
     
-//    essa secretKey é uma de teste do Google
-//    
-//    token de teste tb:
-//    	
-//    {
-//    	  "token": "10000000-aaaa-bbbb-cccc-000000000001"
-//    	}
+    @PostMapping("/ex2")
+    public String catpcha(@RequestBody CaptchaRequest captchaRequest) {
+
+        System.out.println("token: " + captchaRequest.token);
+
+        String request = "https://www.google.com/recaptcha/api/siteverify?"
+                + "secret=" + SECRET_KEY
+                + "&response=" + captchaRequest.token ;
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> respostaApi = restTemplate.getForEntity(request, String.class);
+
+        System.out.println("request: " + request);
+        System.out.println("respostaApi getBody: \n" + respostaApi.getBody());
+
+        return respostaApi.getBody();
+    }
+
     
 
 }

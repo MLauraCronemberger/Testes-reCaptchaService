@@ -65,5 +65,13 @@ public class Teste {
         
     }
     
+//    essa secretKey é uma de teste do Google
+//    
+//    token de teste tb:
+//    	
+//    {
+//    	  "token": "10000000-aaaa-bbbb-cccc-000000000001"
+//    	}
+    
 
 }
